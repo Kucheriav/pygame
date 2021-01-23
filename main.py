@@ -1,68 +1,82 @@
 import pygame
-import math
+import random
 
-class Fan:
-    def __init__(self):
-        self.center_coor = (size[0] // 2, size[1] // 2)
-        self.r = 10
-        self.color = pygame.Color('white')
-        self.surface = pygame.Surface(screen.get_size())
-        pygame.draw.circle(self.surface, self.color, self.center_coor, self.r)
-        self.wings = []
-        self.rotation_index = 0
-        for i in range(3):
-            self.wings.append(Wing(self.center_coor))
+class Board:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.board = [[random.randint(0, 1) for i in range(width)] for _ in range(height)]
+        self.left = 10
+        self.top = 10
+        self.cell_size = 30
+        self.border = 1
+        self.counter = 0
 
-    def update(self):
-        pygame.draw.circle(self.surface, self.color, self.center_coor, self.r)
-        for i, wing in enumerate(self.wings):
-            wing.adjust_to_angle(i * 120 + v)
-            pygame.draw.polygon(self.surface, self.color, wing.shape)
-        screen.blit(self.surface, (0, 0))
+    def set_view(self, left, top, cell_size):
+        self.left = left
+        self.top = top
+        self.cell_size = cell_size
 
-    def rotate(self):
-        angle = self.rotation_index * 3.14 / 180
-        for i, wing in enumerate(self.wings):
-            wing.adjust_to_angle(angle)
-        self.rotation_index += 3
+    def render(self):
+        for i, row in enumerate(self.board):
+            for j, cell in enumerate(row):
+                pygame.draw.rect(screen, pygame.Color('white'),
+                                 [self.left + self.cell_size * j, self.top + self.cell_size * i,
+                                  self.cell_size, self.cell_size], self.border)
+                if self.board[i][j] == 0:
+                    pygame.draw.circle(screen, pygame.Color('blue'), (self.left + self.cell_size * j + self.cell_size / 2,
+                                                                     self.top + self.cell_size * i + self.cell_size / 2),
+                                                                        self.cell_size / 2 - 2)
 
+                if self.board[i][j] == 1:
+                    pygame.draw.circle(screen, pygame.Color('red'), (self.left + self.cell_size * j + self.cell_size / 2,
+                                                                     self.top + self.cell_size * i + self.cell_size / 2),
+                                                                        self.cell_size / 2 - 2)
 
+    def get_click(self, mouse_pos):
+        cell = self.get_cell(mouse_pos)
+        if cell:
+            self.on_click(cell)
 
-class Wing:
-    def __init__(self, center, hypotenuza=70, inner_angle=60):
-        self.c_x, self.c_y = center[0], center[1]
-        self.a_x = self.c_x - hypotenuza * math.cos(math.radians(inner_angle))
-        self.a_y = self.c_y - hypotenuza * math.sin(math.radians(inner_angle))
-        self.b_x = self.c_x + hypotenuza * math.cos(math.radians(inner_angle))
-        self.b_y = self.c_y - hypotenuza * math.sin(math.radians(inner_angle))
-        self.shape = [(self.c_x, self.c_y), (self.a_x, self.a_y), (self.b_x, self.b_y)]
+    def get_cell(self, pos):
+        column = (pos[0] - self.left) // self.cell_size
+        row = (pos[1] - self.top) // self.cell_size
+        if 0 <= row < len(self.board) and 0 <= column < len(self.board[0]):
+            return column, row
+        return None
 
-    def adjust_to_angle(self, angle):
-        for i in range(1, 3):
-            x = self.c_x + (self.shape[i][0] - self.c_x) * math.cos(math.radians(angle)) + (self.c_y - self.shape[i][1]) * math.sin(math.radians(angle))
-            y = self.c_y + (self.shape[i][0] - self.c_x) * math.sin(math.radians(angle)) + (self.shape[i][1] - self.c_y) * math.cos(math.radians(angle))
-            self.shape[i] = (x, y)
+    def on_click(self, cell):
+        if self.counter == self.board[cell[1]][cell[0]]:
+            self.line_invert(cell)
+            self.counter = (self.counter + 1) % 2
+
+    def invert_color(self, cell):
+        # cell - (x, y) but board - [y][x]
+        self.board[cell[1]][cell[0]] = (self.board[cell[1]][cell[0]] + 1) % 2
+
+    def line_invert(self, cell):
+        for i in range(self.width):
+            self.invert_color((i, cell[1]))
+        for j in range(self.height):
+            self.invert_color((cell[0], j))
+        self.invert_color(cell)
+
 
 if __name__ == '__main__':
     pygame.init()
-    pygame.display.set_caption('Вентилятор')
-    size = width, height = 201, 201
+    pygame.display.set_caption('Недореверси')
+    n = int(input('Укажите размер поля\n'))
+    size = width, height = 500, 500
     screen = pygame.display.set_mode(size)
+    board = Board(n, n)
     running = True
-    clock = pygame.time.Clock()
-    fps = 60
-    v = 0
-    fan = Fan()
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    v += 3
-                if event.button == 3:
-                    v -= 3
-        fan.update()
-        clock.tick(fps)
+                board.get_click(event.pos)
+        screen.fill((0, 0, 0))
+        board.render()
         pygame.display.flip()
     pygame.quit()
