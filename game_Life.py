@@ -5,7 +5,7 @@ import copy
 
 class Life(Board):
     def __init__(self, width, height, surface):
-        super().__init__(width, height, surface)
+        super().__init__(width, height, surface, 0)
         self.simulation = False
 
     def next_move(self):
