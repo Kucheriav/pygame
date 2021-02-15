@@ -19,22 +19,16 @@ class Board:
         self.cell_size = cell_size
 
     def render(self):
-        for i in range(len(self.board)):
-            for j in range(len(self.board[i])):
+        for i in range(1, len(self.board) - 1):
+            for j in range(1, len(self.board[i]) - 1):
                 pygame.draw.rect(self.surface, pygame.Color('white'),
                                  [self.left + self.cell_size * j, self.top + self.cell_size * i,
                                   self.cell_size, self.cell_size], self.border)
-                if self.board[i][j] == 'blue':
-                    pygame.draw.circle(self.surface, pygame.Color('blue'),
-                                       (self.left + self.cell_size * j + self.cell_size / 2,
-                                        self.top + self.cell_size * i + self.cell_size / 2),
-                                       self.cell_size / 2 - 2)
-                elif self.board[i][j] == 'red':
-                    pygame.draw.circle(self.surface, pygame.Color('red'),
-                                       (self.left + self.cell_size * j + self.cell_size / 2,
-                                        self.top + self.cell_size * i + self.cell_size / 2),
-                                       self.cell_size / 2 - 2)
-                else:
+                if self.board[i][j] == 10:
+                    pygame.draw.rect(self.surface, pygame.Color('red'),
+                                     [self.left + self.cell_size * j + self.border, self.top + self.cell_size * i + self.border,
+                                      self.cell_size - self.border * 2, self.cell_size - self.border * 2])
+                elif self.board[i][j] != -1:
                     font = pygame.font.Font(None, 40)
                     text = font.render(str(self.board[i][j]), True, (100, 255, 100))
                     text_x = self.left + self.cell_size * j + self.border

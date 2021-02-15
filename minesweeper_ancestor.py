@@ -40,9 +40,15 @@ class Minesweeper(Board):
         s = 0
         for j in range(y - 1, y + 2):
             for i in range(x - 1, x + 2):
-                if self.board[j][i] == 10:
+                if self.board[j][i] == 10 and (x, y) != (i, j):
                     s += 1
         self.board[y][x] = s
+        if self.board[y][x] == 0:
+            for j in range(y - 1, y + 2):
+                for i in range(x - 1, x + 2):
+                    if 1 <= j < len(self.board) - 1 and 1 <= i < len(self.board[0]) - 1:
+                        self.on_click((i, j))
+
 
 
 if __name__ == '__main__':
